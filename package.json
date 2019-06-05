@@ -1,0 +1,24 @@
+{
+  "name": "@iceteachain/lake",
+  "version": "0.1.0",
+  "description": "Sync data from node RPC to local database and provide an API for access.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TradaTech/lake.git"
+  },
+  "author": "Trada Tech <iceteachain@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TradaTech/lake/issues"
+  },
+  "homepage": "https://github.com/TradaTech/lake#readme",
+  "dependencies": {
+    "@iceteachain/web3": "^0.1.2",
+    "debug": "^4.1.1",
+    "dotenv": "^8.0.0"
+  }
+}
