@@ -7,19 +7,26 @@ const {generateOldTxEventQuery} = handlingDataHelper;
 const mysqlHelper = require('./helper/mysqlHelper');
 const { connect, disconnect, query } = mysqlHelper;
 
-const fs = require('fs');
-connect();
-for(var i = 50 ; i < 422 ; i++){
-    web3.searchTransactions(`tx.height = ${i}`).then((result) => {
-        if(result.txs.length === 0){
-            return;
-        } 
-        result.txs.forEach( tx => {
-            let decoded = web3.utils.decodeTxResult(tx)
-            let mysqlQuery = generateOldTxEventQuery(decoded);
-            query(mysqlQuery)
-        });
-    
-    })
+// connect();
+/**
+ * Fetch transaction data from `from` block height to `to` block height
+ * @param {*} from block height
+ * @param {*} to block height
+ */
+function fetchData(from, to){
+    for(var i = from ; i <= to ; i++){
+        web3.searchTransactions(`tx.height = ${i}`).then((result) => {
+            if(result.txs.length === 0){
+                return;
+            } 
+            result.txs.forEach( tx => {
+                let decoded = web3.utils.decodeTxResult(tx)
+                let mysqlQuery = generateOldTxEventQuery(decoded);
+                query(mysqlQuery)
+            });
+        
+        })
+    }
+
 }
 
