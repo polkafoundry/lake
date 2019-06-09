@@ -14,8 +14,11 @@ const disconnect = () => {
 }
 const query = (sql) => {
     connection.query(sql, (err, result) => {
-        if(err) throw err;
-        console.log(result);
+        if(err) {
+            console.log(sql)
+            throw err;
+        }
+        // console.log(result);
     })
 }
 module.exports = {
