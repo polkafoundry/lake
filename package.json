@@ -2,9 +2,9 @@
   "name": "@iceteachain/lake",
   "version": "0.1.0",
   "description": "Sync data from node RPC to local database and provide an API for access.",
-  "main": "index.js",
+  "main": "./src/index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node ./src/index.js"
   },
   "repository": {
     "type": "git",

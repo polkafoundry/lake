@@ -1,45 +1,9 @@
 const moment = require('moment');
-const { IceteaWeb3 } = require('@iceteachain/web3')
-const web3 = new IceteaWeb3('wss://rpc.icetea.io/websocket');
-const mysql = require("mysql");
 
-const con = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '12345678',
-    database: 'lake_db'
-});
-con.connect();
-['NewBlock', 'Tx'].forEach((event) => {
-    web3.subscribe(event, {}, (err, result) => {
-        if (err) throw err;
-        switch (event) {
-            case 'NewBlock':
-                let blockQuery = generateNewBlockEventQuery(result)
-                query(blockQuery)
-                break;
-            case 'Tx':
-                let txQuery = generateTxEventQuery(result)
-                query(txQuery)
-                break;
-        }
-    })
-})
-
-/**
- * 
- * `Temporary approach`, keep connection with mysql `ON` 
- */
-// con.end();
-function query(sql){
-    con.query(sql, (err, result) => {
-        if(err) throw err;
-        console.log(result);
-    })
-}
 function convertUTCtoTime(timeInUTC) {
     return moment(timeInUTC).format('YYYY-MM-DD hh:mm:ss');
 }
+
 function generateNewBlockEventQuery(result) {
     let block = result.data.value.block;
     let {
@@ -109,8 +73,7 @@ function generateTxEventQuery(result) {
     return sql;
 }
 
-
-
-
-
-
+module.exports = {
+    generateNewBlockEventQuery,
+    generateTxEventQuery
+}
