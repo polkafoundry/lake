@@ -3,7 +3,7 @@ const mysql = require("mysql");
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '12345678',
+    password: 'TPCtpvc1996',
     database: 'lake_db'
 });
 const connect = () => {
@@ -22,6 +22,7 @@ const query = (sql) => {
     })
 }
 module.exports = {
+    connection,
     connect,
     disconnect,
     query
