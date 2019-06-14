@@ -36,7 +36,7 @@ const express = require('express');
 const app = express();
 
 // Select blocks
-app.get('/getblocks', (req, res) => {
+app.get('/api/block', (req, res) => {
     let sql = 'SELECT * FROM block';
     connection.query(sql, (err, results) => {
         if (err) throw err;
@@ -45,11 +45,36 @@ app.get('/getblocks', (req, res) => {
     });
 });
 
-app.get('/gettransactions', (req, res) => {
+
+// Get block from height
+app.get('/api/block/:height', (req, res) => {
+    let sql = `SELECT * FROM block WHERE height = ${req.params.height}`;
+    connection.query(sql, (err, results) => {
+        if (err) throw err;
+        console.log('Block fetched from height...');
+        res.send(results);
+    });
+});
+
+
+
+// Get tx
+app.get('/api/tx', (req, res) => {
     let sql = 'SELECT * FROM transaction';
     connection.query(sql, (err, results) => {
         if (err) throw err;
         console.log('Transactions fetched...');
+        res.send(results);
+    });
+});
+
+
+// Get tx from hash
+app.get('/api/tx/:hash', (req, res) => {
+    let sql = `SELECT * FROM transaction WHERE hash = '${req.params.hash}'`;
+    connection.query(sql, (err, results) => {
+        if (err) throw err;
+        console.log('Transactions fetched from hash...');
         res.send(results);
     })
 })
