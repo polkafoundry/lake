@@ -5,7 +5,7 @@ const { query, disconnect } = require('./helper/mysqlHelper')
 const factory = require('./helper/handlingDataHelper')
 
 // Declare a route
-fastify.get('/api/block/list', async (request, reply) => {
+fastify.get('/block/list', async (request, reply) => {
   let pageSize = parseInt(request.query.page_size)
   if (!pageSize || pageSize <= 0 || pageSize > 100) {
     pageSize = 15
@@ -18,19 +18,19 @@ fastify.get('/api/block/list', async (request, reply) => {
   return query(factory.makeListBlockQuery(pageSize, offset))
 })
 
-fastify.get('/api/block/count', async (request, reply) => {
+fastify.get('/block/count', async (request, reply) => {
   return query(factory.makeCountQuery('block'))
 })
 
-fastify.get('/api/block/:height', async (request, reply) => {
+fastify.get('/block/:height', async (request, reply) => {
   return query(factory.makeOneBlockQuery(request.params.height))
 })
 
-fastify.get('/api/block/latest', async (request, reply) => {
+fastify.get('/block/latest', async (request, reply) => {
   return query(factory.makeLastBlock())
 })
 
-fastify.get('/api/tx/list', async (request, reply) => {
+fastify.get('/tx/list', async (request, reply) => {
   let pageSize = parseInt(request.query.page_size)
   if (!pageSize || pageSize <= 0 || pageSize > 100) {
     pageSize = 15
@@ -57,11 +57,11 @@ fastify.get('/api/tx/list', async (request, reply) => {
   return query(factory.makeListTxQuery(filter, pageSize, offset))
 })
 
-fastify.get('/api/tx/count', async (request, reply) => {
+fastify.get('/tx/count', async (request, reply) => {
   return query(factory.makeCountQuery('tx'))
 })
 
-fastify.get('/api/tx/:hash', async (request, reply) => {
+fastify.get('/tx/:hash', async (request, reply) => {
   return query(factory.makeOneTxQuery(request.params.hash))
 })
 
