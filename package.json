@@ -4,7 +4,9 @@
   "description": "Sync data from node RPC to local database and provide an API for access.",
   "main": "./src/index.js",
   "scripts": {
-    "start": "node ./src/index.js"
+    "start": "node ./src/index.js",
+    "watch": "node ./src/watch.js",
+    "old": "node ./src/fetch.js"
   },
   "repository": {
     "type": "git",
@@ -17,11 +19,15 @@
   },
   "homepage": "https://github.com/TradaTech/lake#readme",
   "dependencies": {
-    "@iceteachain/web3": "^0.1.2",
+    "@iceteachain/web3": "^0.1.4",
     "debug": "^4.1.1",
     "dotenv": "^8.0.0",
+    "fastify": "^2.5.0",
     "moment": "^2.24.0",
     "mysql": "^2.17.1",
     "nodemon": "^1.19.1"
+  },
+  "devDependencies": {
+    "standard": "^12.0.1"
   }
 }

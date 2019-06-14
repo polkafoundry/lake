@@ -1,34 +1,81 @@
-const { IceteaWeb3 } = require('@iceteachain/web3')
-const web3 = new IceteaWeb3('wss://rpc.icetea.io/websocket');
+require('dotenv').config()
+const fastify = require('fastify')({ logger: true })
 
-const mysqlHelper = require('./helper/mysqlHelper');
-const { connect, disconnect, query } = mysqlHelper;
+const { query, disconnect } = require('./helper/mysqlHelper')
+const factory = require('./helper/handlingDataHelper')
 
-const handlingDataHelper = require('./helper/handlingDataHelper');
-const { generateNewBlockEventQuery, generateTxEventQuery } = handlingDataHelper;
-
-const fs = require('fs');
-connect();
-
-['NewBlock', 'Tx'].forEach((event) => {
-    web3.subscribe(event, {}, (err, result) => {
-        if (err) throw err;
-        switch (event) {
-            case 'NewBlock':
-                let blockQuery = generateNewBlockEventQuery(result);
-                query(blockQuery);
-                break;
-            case 'Tx':
-                let txQuery = generateTxEventQuery(result);
-                query(txQuery);
-                break;
-        }
-    })
+// Declare a route
+fastify.get('/api/block/list', async (request, reply) => {
+  let pageSize = parseInt(request.query.page_size)
+  if (!pageSize || pageSize <= 0 || pageSize > 100) {
+    pageSize = 15
+  }
+  let pageIndex = parseInt(request.query.page_index)
+  if (!pageIndex || pageIndex <= 0) {
+    pageIndex = 1
+  }
+  const offset = (pageIndex - 1) * pageSize
+  return query(factory.makeListBlockQuery(pageSize, offset))
 })
 
-/**
- *
- * `Temporary approach:` keep connection with mysql `ON`
- */
-// disconnect();
+fastify.get('/api/block/count', async (request, reply) => {
+  return query(factory.makeCountQuery('block'))
+})
 
+fastify.get('/api/block/:height', async (request, reply) => {
+  return query(factory.makeOneBlockQuery(request.params.height))
+})
+
+fastify.get('/api/block/latest', async (request, reply) => {
+  return query(factory.makeLastBlock())
+})
+
+fastify.get('/api/tx/list', async (request, reply) => {
+  let pageSize = parseInt(request.query.page_size)
+  if (!pageSize || pageSize <= 0 || pageSize > 100) {
+    pageSize = 15
+  }
+  let pageIndex = parseInt(request.query.page_index)
+  if (!pageIndex || pageIndex <= 0) {
+    pageIndex = 1
+  }
+
+  const offset = (pageIndex - 1) * pageSize
+  const filter = {}
+  if (request.query.hash) {
+    filter.hash = request.query.hash
+  }
+  if (request.query.height) {
+    filter.height = request.query.height
+  }
+  if (request.query.from) {
+    filter.from = request.query.from
+  }
+  if (request.query.to) {
+    filter.to = request.query.to
+  }
+  return query(factory.makeListTxQuery(filter, pageSize, offset))
+})
+
+fastify.get('/api/tx/count', async (request, reply) => {
+  return query(factory.makeCountQuery('tx'))
+})
+
+fastify.get('/api/tx/:hash', async (request, reply) => {
+  return query(factory.makeOneTxQuery(request.params.hash))
+})
+
+// Run the server!
+const start = async () => {
+  try {
+    await fastify.listen(3000)
+    fastify.log.info(`server listening on ${fastify.server.address().port}`)
+  } catch (err) {
+    fastify.log.error(err)
+    disconnect(err => {
+      console.error(err)
+      process.exit(1)
+    })
+  }
+}
+start()
