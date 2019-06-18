@@ -67,9 +67,7 @@ const resolvers = {
                     if (!args.query) return blocks
 
                     return blocks.filter((block) => {
-                        if (block.header.height == args.query) {
-                            return block
-                        }
+                        return block.header.height == args.query
                     })
                 })
         }
