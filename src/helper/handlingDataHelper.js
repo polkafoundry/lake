@@ -51,11 +51,13 @@ const makeInsertQuery = (table, data) => {
 }
 
 function generateNewBlockEventQuery(result) {
-    return makeInsertQuery('block', result.data.value.block.header)
+    return makeInsertQuery('block', result.data.value.header)
 }
 
 function generateOldBlockEventQuery(result) {
-    return makeInsertQuery('block', result.block.header)
+    const data = result.header
+    data.hash = result.block_id.hash
+    return makeInsertQuery('block', data)
 }
 
 function generateTxQuery(tx) {
@@ -145,34 +147,40 @@ const makeCountQuery = table => {
     return 'select count(*) as count from ' + table
 }
 
-const makeLastBlock = () => {
-    return 'select * from block order by height DESC limit 1'
+const makeLastBlock = fields => {
+    const fieldText = (fields || fields.length) ? fields.map(f => '`' + f + '`').join(',') : '*'
+    return 'select ' + fieldText + ' from block order by height DESC limit 1'
+}
+
+const makeLastTx = fields => {
+    const fieldText = (fields || fields.length) ? fields.map(f => 'tx.`' + f + '`').join(',') : '*'
+    return 'select ' + fieldText + ',block.`time` from tx join block on tx.height = block.height order by tx.height DESC, tx.\`index\` DESC limit 1'
 }
 
 const makeListTxQuery = (filter, size, offset) => {
     const fields = { ...(mapping.tx) }
     delete fields.data_src
     delete fields.result_data
-    const fieldText = Object.keys(fields).map(x => '`' + x + '`').join(',')
-    let sql = 'select ' + fieldText + ' from tx'
+    const fieldText = Object.keys(fields).map(x => 'tx.`' + x + '`').join(',')
+    let sql = 'select ' + fieldText + ' ,block.`time` from tx join block on tx.height = block.height'
     const keys = Object.keys(filter)
     const values = []
     if (keys.length) {
         sql += ' where '
         const where = []
         keys.forEach(k => {
-            where.push(`${k} = ?`)
+            where.push(`tx.\`${k}\` = ?`)
             values.push(filter[k])
         })
 
         sql += where.join(' and ')
     }
-    sql += ` order by height DESC, \`index\` DESC limit ${size} offset ${offset}`
+    sql += ` order by tx.height DESC, tx.\`index\` DESC limit ${size} offset ${offset}`
     return { sql, values }
 }
 
 const makeOneTxQuery = hash => {
-    const sql = 'select * from tx where hash = ?'
+    const sql = 'select tx.*, block.`time` from tx join block on tx.height = block.height where tx.hash = ?'
     return { sql, values: [hash] }
 }
 
@@ -185,6 +193,7 @@ module.exports = {
     makeOneBlockQuery,
     makeCountQuery,
     makeLastBlock,
+    makeLastTx,
     makeListTxQuery,
     makeOneTxQuery
 }

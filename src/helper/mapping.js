@@ -1,6 +1,7 @@
 const block = {
   'height': '',
   'chain_id': '',
+  'hash': '',
   'time': 'new.Date',
   'num_txs': '',
   'total_txs': '',

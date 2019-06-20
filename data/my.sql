@@ -3,18 +3,19 @@ CREATE DATABASE icetea_lake;
 CREATE TABLE IF NOT EXISTS `block` (
   `height` int(11) NOT NULL,
   `chain_id` varchar(255) DEFAULT NULL,
+  `hash` varchar(255) NOT NULL,
   `time` datetime NOT NULL,
   `num_txs` int(11) NOT NULL,
   `total_txs` int(11) NOT NULL,
-  `data_hash` varchar(255) NOT NULL,
-  `validators_hash` varchar(255) NOT NULL,
-  `next_validators_hash` varchar(255) NOT NULL,
-  `consensus_hash` varchar(255) NOT NULL,
-  `app_hash` varchar(255) NOT NULL,
-  `last_results_hash` varchar(255) NOT NULL,
-  `evidence_hash` varchar(255) NOT NULL,
-  `proposer_address` varchar(255) NOT NULL,
-  `last_block_id_hash` varchar(255) NOT NULL,
+  `data_hash` varchar(255) DEFAULT NULL,
+  `validators_hash` varchar(255) DEFAULT NULL,
+  `next_validators_hash` varchar(255) DEFAULT NULL,
+  `consensus_hash` varchar(255) DEFAULT NULL,
+  `app_hash` varchar(255) DEFAULT NULL,
+  `last_results_hash` varchar(255) DEFAULT NULL,
+  `evidence_hash` varchar(255) DEFAULT NULL,
+  `proposer_address` varchar(255) DEFAULT NULL,
+  `last_block_id_hash` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`height`)
 ) ENGINE=InnoDB;
 

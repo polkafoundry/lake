@@ -1,4 +1,5 @@
 require('dotenv').config()
+const debug = require('debug')('lake:web')
 const fastify = require('fastify')({ logger: true })
 
 const { query, disconnect } = require('./helper/mysqlHelper')
@@ -73,7 +74,7 @@ const start = async () => {
   } catch (err) {
     fastify.log.error(err)
     disconnect(err => {
-      console.error(err)
+      debug(err)
       process.exit(1)
     })
   }
