@@ -10,8 +10,18 @@ const { query, disconnect } = mysqlHelper
 
 const { fetchOldBlocks, fetchOldTxs } = require('./fetchOldData')
 
-const { makeLastBlock, makeLastTx } = require('./helper/handlingDataHelper')
+const { makeLastBlock, makeLastTx, makeListBlockQuery } = require('./helper/handlingDataHelper')
 
+const { blockCache } = require('./cacheDataInMem');
+
+
+function initializeCache(){
+  const blockQuery = makeListBlockQuery(process.env.BLOCK_CACHE_LENGTH, 0);
+  query(blockQuery).then((result) => {
+    blockCache.setData(result);
+    console.log( blockCache.getHashAndTimeData())
+  })
+}
 const close = (code = 1) => {
   const unsub = global._sub ? global._sub.unsubscribe() : Promise.resolve(undefined)
   unsub.finally(() => {
@@ -40,6 +50,7 @@ const fetchData = async (fromBlockHeight, fromTxHeight, toHeight) => {
   } catch (error) {
     handleError(error)
   }
+  //async with memory
 }
 
 const fetchAtInterval = async () => {
@@ -81,6 +92,7 @@ const watchNewBlock = async () => {
 
 const start = async () => {
   await fetchAtInterval()
+  initializeCache()
   watchNewBlock()
 
   // exit in case the websocket is lost (e.g. rpc restarts), so pm2 can restart things
