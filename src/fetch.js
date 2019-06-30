@@ -12,16 +12,10 @@ const { fetchOldBlocks, fetchOldTxs } = require('./fetchOldData')
 
 const { makeLastBlock, makeLastTx, makeListBlockQuery } = require('./helper/handlingDataHelper')
 
-const { blockCache } = require('./cacheDataInMem');
+const { updateCache, initializeCache } = require('./cacheDataInMem');
 
 
-function initializeCache(){
-  const blockQuery = makeListBlockQuery(process.env.BLOCK_CACHE_LENGTH, 0);
-  query(blockQuery).then((result) => {
-    blockCache.setData(result);
-    console.log( blockCache.getHashAndTimeData())
-  })
-}
+
 const close = (code = 1) => {
   const unsub = global._sub ? global._sub.unsubscribe() : Promise.resolve(undefined)
   unsub.finally(() => {
@@ -49,8 +43,7 @@ const fetchData = async (fromBlockHeight, fromTxHeight, toHeight) => {
 
   } catch (error) {
     handleError(error)
-  }
-  //async with memory
+  } 
 }
 
 const fetchAtInterval = async () => {
@@ -79,20 +72,20 @@ const fetchAtInterval = async () => {
 }
 
 const watchNewBlock = async () => {
-  global._sub = web3.subscribe('NewBlockHeader', (error, result) => {
+  global._sub = web3.subscribe('NewBlockHeader', async (error, result) => {
     if (error) {
       handleError(error)
       return
     }
 
     const height = result.data.value.header.height
-    fetchData(height - 1, height - 1, height)
+    await fetchData(height - 1, height - 1, height)
+    await updateCache()
   })
 }
-
 const start = async () => {
   await fetchAtInterval()
-  initializeCache()
+  await initializeCache()
   watchNewBlock()
 
   // exit in case the websocket is lost (e.g. rpc restarts), so pm2 can restart things

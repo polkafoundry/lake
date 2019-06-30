@@ -27,7 +27,7 @@ fastify.get('/block/:height', async (request, reply) => {
   return query(factory.makeOneBlockQuery(request.params.height))
 })
 
-fastify.get('/block/latest', async (request, reply) => {
+fastify.get('/block/lastest', async (request, reply) => {
   return query(factory.makeLastBlock())
 })
 
