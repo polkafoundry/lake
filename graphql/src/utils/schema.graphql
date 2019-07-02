@@ -1,0 +1,93 @@
+# import UserOrderByInput from './generated/prisma.graphql'
+
+type Query {
+    users(query: String, first: Int, skip: Int, after: String, orderBy: UserOrderByInput): [User!]!
+    me: User!
+    blocks(query: String, first: Int, skip: Int, after: String),
+    transactions(query: String, first: Int, skip: Int, after: String)
+}
+
+type Mutation {
+    createUser(data: CreateUserInput!): AuthPayload!
+    login(data: LoginUserInput!): AuthPayload!
+    deleteUser: User!
+    updateUser(data: UpdateUserInput!): User!
+}
+
+# type Subscription {
+
+# }
+
+type AuthPayload {
+    token: String!
+    user: User!
+}
+
+input CreateUserInput {
+    name: String!
+    email: String!
+    password: String!
+}
+
+input LoginUserInput {
+    email: String!
+    password: String!
+}
+
+input UpdateUserInput {
+    name: String
+    email: String
+    password: String
+}
+
+type User {
+    id: ID!
+    name: String!
+    email: String
+    password: String!
+    updatedAt: String!
+    createdAt: String!
+}
+
+type Block {
+  id: ID! @id
+  height: Int! @unique
+  appHash: String! 
+  chainId: String 
+  consensusHash: String! 
+  dataHash: String! 
+  evidenceHash: String! 
+  lastBlockIdHash: String!
+  lastResultsHash: String! 
+  nextValidatorsHash: String! 
+  numTxs: Int! 
+  proposerAddress: String! 
+  time: DateTime!
+  totalTxs: Int! 
+  validatorsHash: String! 
+}
+
+type Transaction {
+  id: ID! @id
+  hash: String! @unique
+  height: Int!
+  nonce: Float
+  pubkey: String
+  resultCode: Int 
+  resultData: String 
+  resultLog: String 
+  signature: String
+  txData: String 
+  txFee: Int 
+  txFrom: String 
+  txIndex: Int 
+  txPayer: String 
+  txTo: String 
+  txValue: Int 
+}
+
+enum MutationType {
+    CREATED
+    UPDATED
+    DELETED
+}

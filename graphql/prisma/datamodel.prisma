@@ -1,0 +1,45 @@
+type User {
+  id: ID! @id
+  name: String!
+  email: String! @unique
+  password: String!
+  updatedAt: DateTime! @updatedAt
+  createdAt: DateTime! @createdAt
+}
+
+type Block {
+  id: ID! @id
+  height: Int! @unique
+  appHash: String! 
+  chainId: String 
+  consensusHash: String! 
+  dataHash: String! 
+  evidenceHash: String! 
+  lastBlockIdHash: String!
+  lastResultsHash: String! 
+  nextValidatorsHash: String! 
+  numTxs: Int! 
+  proposerAddress: String! 
+  time: DateTime!
+  totalTxs: Int! 
+  validatorsHash: String! 
+}
+
+type Transaction {
+  id: ID! @id
+  hash: String! @unique
+  height: Int!
+  nonce: Float
+  pubkey: String
+  resultCode: Int 
+  resultData: String 
+  resultLog: String 
+  signature: String
+  txData: String 
+  txFee: Int 
+  txFrom: String 
+  txIndex: Int 
+  txPayer: String 
+  txTo: String 
+  txValue: Int 
+}

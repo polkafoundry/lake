@@ -1,0 +1,2 @@
+endpoint: https://lake-952445efcb.herokuapp.com/lake/dev
+datamodel: datamodel.prisma
