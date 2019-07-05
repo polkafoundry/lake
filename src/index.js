@@ -5,6 +5,7 @@ const fastify = require('fastify')({ logger: true })
 const { query, disconnect } = require('./helper/mysqlHelper')
 const factory = require('./helper/handlingDataHelper')
 
+const { blockCache, txCache } = require('./cacheDataInMem')
 // Declare a route
 fastify.get('/block/list', async (request, reply) => {
   let pageSize = parseInt(request.query.page_size)
