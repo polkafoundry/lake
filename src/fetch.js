@@ -87,9 +87,9 @@ const start = async () => {
   await fetchAtInterval()
   await initializeCache()
   watchNewBlock()
-
+  
   // exit in case the websocket is lost (e.g. rpc restarts), so pm2 can restart things
   web3.onError(handleError)
 }
 
-start()
+module.exports = start

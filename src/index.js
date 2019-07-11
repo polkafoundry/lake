@@ -6,6 +6,8 @@ const { query, disconnect } = require('./helper/mysqlHelper')
 const factory = require('./helper/handlingDataHelper')
 
 const { blockCache, txCache } = require('./cacheDataInMem')
+
+const fetch = require('./fetch')
 // Declare a route
 fastify.get('/block/list', async (request, reply) => {
   let pageSize = parseInt(request.query.page_size)
@@ -17,6 +19,10 @@ fastify.get('/block/list', async (request, reply) => {
     pageIndex = 1
   }
   const offset = (pageIndex - 1) * pageSize
+  const isCacheHit = blockCache.isDataOnCache(pageSize, offset);
+  if(isCacheHit) {
+    return blockCache.getDataByPageOffset(pageSize, offset)
+  }
   return query(factory.makeListBlockQuery(pageSize, offset))
 })
 
@@ -25,11 +31,16 @@ fastify.get('/block/count', async (request, reply) => {
 })
 
 fastify.get('/block/:height', async (request, reply) => {
-  return query(factory.makeOneBlockQuery(request.params.height))
+  const height = request.params.height;
+  const isCacheHit = blockCache.isBlockOnCache(height);
+  if(isCacheHit) {
+    return blockCache.getDataByHeight(height)
+  }
+  return query(factory.makeOneBlockQuery(height))
 })
 
 fastify.get('/block/lastest', async (request, reply) => {
-  return query(factory.makeLastBlock())
+  return blockCache.getDataByHeight()
 })
 
 fastify.get('/tx/list', async (request, reply) => {
@@ -72,6 +83,7 @@ const start = async () => {
   try {
     await fastify.listen(3000)
     fastify.log.info(`server listening on ${fastify.server.address().port}`)
+    fetch()
   } catch (err) {
     fastify.log.error(err)
     disconnect(err => {

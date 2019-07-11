@@ -9,7 +9,7 @@ class BlockCache {
         this.cache = [];
         this.cacheSize = process.env.BLOCK_CACHE_LENGTH;
     }
-    async initializeCache(){
+    async initializeCache() {
         const blocksInCacheQuery = makeListBlockQuery(this.cacheSize, 0);
         const queryResult = await query(blocksInCacheQuery);
         this.setData(queryResult);
@@ -19,15 +19,33 @@ class BlockCache {
     }
     //update blocks to the head of cache
     update(newBlock) {
-        let lastestBlockInCache = this.cache[0];
-        // if the lastest block was added more transactions ( not generating a new Block)
-        // I haven't tested yet because at the moment: one transaction per block.
-        if (newBlock.height === lastestBlockInCache.height) {
-            this.cache[0] = newBlock;
-        } else {
-            this.cache.splice(0, 0, newBlock);
-            this.cache.length = this.cacheSize;
+        this.cache.splice(0, 0, newBlock);
+        this.cache.length = this.cacheSize;
+    }
+    isDataOnCache(pageSize, offset) {
+        if (offset < this.getCacheSize() && pageSize <= this.getCacheSize()) {
+            if (offset + pageSize - 1 < this.getCacheSize()) {
+                console.log('cache hit')
+                return true;
+            }
+            console.log('cache miss')
+            return false;
+            
         }
+        console.log('cache miss')
+        return false;
+    }
+    isBlockOnCache(height){
+        const max = this.cache[0].height;
+        const min = this.cache[99].height;
+        if( height >= min && height <= max) {
+            console.log('cache hit');
+            return true
+        } else {
+            console.log('cache miss')
+            return false;
+        }
+
     }
     setData(data) {
         if (Array.isArray(data)) {
@@ -35,8 +53,16 @@ class BlockCache {
             this.cache.length = this.cacheSize;
         }
     }
-    getData(from, to) {
-        return this.cache;
+    getDataByPageOffset(pageSize, offset) {
+        return this.cache.slice(offset, offset + pageSize - 1)
+    }
+    getDataByHeight(height) {
+        if(height) {
+            const max = this.cache[0].height;
+            return this.cache[max - height ]
+        } else {
+            return this.cache[0]
+        }
     }
     getHashAndTimeData() {
         console.log(this.cache.map(value => {
@@ -53,7 +79,7 @@ class TransactionCache {
         this.cache = [];
         this.cacheSize = process.env.TX_CACHE_LENGTH;
     }
-    async initializeCache(){
+    async initializeCache() {
         const txsInCacheQuery = makeListTxQuery({}, this.cacheSize, 0)
         const queryResult = await query(txsInCacheQuery);
         this.setData(queryResult);
@@ -91,10 +117,6 @@ class TransactionCache {
 let blockCache = new BlockCache();
 let txCache = new TransactionCache();
 
-const updateCache = async () => {
-    await updateBlockCache();
-    await updateTxCache();
-}
 const updateBlockCache = async () => {
     let newestBlock = await query(makeLastBlock());
     blockCache.update(newestBlock[0]);
@@ -104,7 +126,10 @@ const updateTxCache = async () => {
     let numTx = newestBlock[0].num_txs;
     const newestTxs = await query(makeListTxQuery({}, numTx, 0));
     txCache.update(newestTxs);
-
+}
+const updateCache = async () => {
+    await updateBlockCache();
+    await updateTxCache();
 }
 const initializeCache = async () => {
     await blockCache.initializeCache();
