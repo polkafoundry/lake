@@ -67,6 +67,7 @@ fastify.get('/tx/list', async (request, reply) => {
   if (request.query.to) {
     filter.to = request.query.to
   }
+  console.log(factory.makeListTxQuery(filter, pageSize, offset))
   return query(factory.makeListTxQuery(filter, pageSize, offset))
 })
 
@@ -75,7 +76,14 @@ fastify.get('/tx/count', async (request, reply) => {
 })
 
 fastify.get('/tx/:hash', async (request, reply) => {
-  return query(factory.makeOneTxQuery(request.params.hash))
+  const hash = request.params.hash;
+  const {cacheHit, data} = txCache.getTxByHash(hash);
+  if(cacheHit){
+    console.log('cache hit')
+    return data;
+  }
+  console.log('cache miss')
+  return query(factory.makeOneTxQuery(hash))
 })
 
 // Run the server!

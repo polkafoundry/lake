@@ -17,7 +17,6 @@ class BlockCache {
     getCacheSize() {
         return this.cacheSize;
     }
-    //update blocks to the head of cache
     update(newBlock) {
         this.cache.splice(0, 0, newBlock);
         this.cache.length = this.cacheSize;
@@ -45,7 +44,6 @@ class BlockCache {
             console.log('cache miss')
             return false;
         }
-
     }
     setData(data) {
         if (Array.isArray(data)) {
@@ -54,7 +52,7 @@ class BlockCache {
         }
     }
     getDataByPageOffset(pageSize, offset) {
-        return this.cache.slice(offset, offset + pageSize - 1)
+        return this.cache.slice(offset, offset + pageSize)
     }
     getDataByHeight(height) {
         if(height) {
@@ -100,8 +98,23 @@ class TransactionCache {
             this.cache.length = this.cacheSize;
         }
     }
-    getData(from, to) {
-        return this.cache;
+    getTxByHash(hash){
+        function checkHash(tx){
+            if(tx.hash === hash) 
+                return true;
+            return false;
+        }
+        const tx = this.cache.find(checkHash)
+        if(tx) {
+            return {
+                cacheHit: true,
+                data: tx
+            }
+        }
+        return {
+            cacheHit: false,
+            data: null
+        }
     }
     getHashAndTimeData() {
         console.log(this.cache.map(value => {
