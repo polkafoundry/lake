@@ -116,6 +116,31 @@ class TransactionCache {
             data: null
         }
     }
+    getTx(filter, pageSize, offset) {
+        const keys = Object.keys(filter);
+        let filteredCache = [];
+        this.cache.forEach(tx => {
+            let eligible = true;
+            keys.forEach(key => {
+                if(tx[key] != filter[key])
+                    eligible = false;
+            })
+            if(eligible)
+                filteredCache.push(tx)
+        })
+        if(offset + pageSize - 1 < filteredCache.length) {
+            console.log('cache hit')
+            return {
+                cacheHit: true,
+                data: filteredCache.slice(offset, offset + pageSize)
+            }
+        }
+        console.log('cache miss')
+        return {
+            cacheHit: false,
+            data: null
+        }
+    }
     getHashAndTimeData() {
         console.log(this.cache.map(value => {
             return {

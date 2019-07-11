@@ -67,7 +67,10 @@ fastify.get('/tx/list', async (request, reply) => {
   if (request.query.to) {
     filter.to = request.query.to
   }
-  console.log(factory.makeListTxQuery(filter, pageSize, offset))
+  const {cacheHit, data} = txCache.getTx(filter, pageSize, offset)
+  if(cacheHit) {
+    return data
+  }
   return query(factory.makeListTxQuery(filter, pageSize, offset))
 })
 
