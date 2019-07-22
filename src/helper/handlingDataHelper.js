@@ -148,16 +148,12 @@ const makeCountQuery = table => {
 }
 
 const makeLastBlock = fields => {
-    if(!fields) 
-        return 'select *' + ' from block order by height DESC limit 1'
-    const fieldText = (fields || fields.length) ? fields.map(f => '`' + f + '`').join(',') : '*'
+    const fieldText = (fields && fields.length) ? fields.map(f => '`' + f + '`').join(',') : '*'
     return 'select ' + fieldText + ' from block order by height DESC limit 1'
 }
 
 const makeLastTx = fields => {
-    if(!fields)
-        return;
-    const fieldText = (fields || fields.length) ? fields.map(f => 'tx.`' + f + '`').join(',') : '*'
+    const fieldText = (fields && fields.length) ? fields.map(f => 'tx.`' + f + '`').join(',') : '*'
     return 'select ' + fieldText + ',block.`time` from tx join block on tx.height = block.height order by tx.height DESC, tx.\`index\` DESC limit 1'
 }
 
