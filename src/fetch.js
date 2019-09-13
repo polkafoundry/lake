@@ -58,7 +58,7 @@ const fetchAtInterval = async () => {
 
     // Get latest block
     const latestBlock = await web3.getBlocks({ minHeight: 1, maxHeight: 1 })
-    //debug(latestBlock)
+    // debug(latestBlock)
     latestHeight = latestBlock.last_height
 
     await fetchData(fromBlockHeight, fromTxHeight, latestHeight)

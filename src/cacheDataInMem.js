@@ -1,6 +1,7 @@
 require('dotenv').config();
 const mysqlHelper = require('./helper/mysqlHelper')
 const { query } = mysqlHelper;
+const debug = require('debug')('lake:cache')
 
 const { makeLastBlock, makeListTxQuery, makeListBlockQuery } = require('./helper/handlingDataHelper')
 
@@ -9,39 +10,36 @@ class BlockCache {
         this.cache = [];
         this.cacheSize = process.env.BLOCK_CACHE_LENGTH;
     }
-    async initializeCache() {
+    async init() {
         const blocksInCacheQuery = makeListBlockQuery(this.cacheSize, 0);
         const queryResult = await query(blocksInCacheQuery);
         this.setData(queryResult);
-    }
-    getCacheSize() {
-        return this.cacheSize;
     }
     update(newBlock) {
         this.cache.splice(0, 0, newBlock);
         this.cache.length = this.cacheSize;
     }
-    isDataOnCache(pageSize, offset) {
-        if (offset < this.getCacheSize() && pageSize <= this.getCacheSize()) {
-            if (offset + pageSize - 1 < this.getCacheSize()) {
-                console.log('cache hit')
+    blocksOnCache(pageSize, offset) {
+        if (offset <= this.cacheSize && pageSize <= this.cacheSize) {
+            if (offset + pageSize - 1 < this.cacheSize) {
+                debug('cache hit')
                 return true;
             }
-            console.log('cache miss')
+            debug('cache miss')
             return false;
             
         }
-        console.log('cache miss')
+        debug('cache miss')
         return false;
     }
-    isBlockOnCache(height){
+    blockOnCache(height){
         const max = this.cache[0].height;
         const min = this.cache[99].height;
         if( height >= min && height <= max) {
-            console.log('cache hit');
+            debug('cache hit');
             return true
         } else {
-            console.log('cache miss')
+            debug('cache miss')
             return false;
         }
     }
@@ -51,19 +49,20 @@ class BlockCache {
             this.cache.length = this.cacheSize;
         }
     }
-    getDataByPageOffset(pageSize, offset) {
+    getBlocks(pageSize, offset) {
         return this.cache.slice(offset, offset + pageSize)
     }
-    getDataByHeight(height) {
+    getBlock(height) {
         if(height) {
             const max = this.cache[0].height;
             return this.cache[max - height ]
         } else {
+            debug('cache hit');
             return this.cache[0]
         }
     }
     getHashAndTimeData() {
-        console.log(this.cache.map(value => {
+        debug(this.cache.map(value => {
             return {
                 height: value.height,
                 time: value.time
@@ -77,13 +76,10 @@ class TransactionCache {
         this.cache = [];
         this.cacheSize = process.env.TX_CACHE_LENGTH;
     }
-    async initializeCache() {
+    async init() {
         const txsInCacheQuery = makeListTxQuery({}, this.cacheSize, 0)
         const queryResult = await query(txsInCacheQuery);
         this.setData(queryResult);
-    }
-    getCacheSize() {
-        return this.cacheSize;
     }
     //update transactions to the head of cache
     update(newTxs) {
@@ -98,7 +94,7 @@ class TransactionCache {
             this.cache.length = this.cacheSize;
         }
     }
-    getTxByHash(hash){
+    getTx(hash){
         function checkHash(tx){
             if(tx.hash === hash) 
                 return true;
@@ -116,7 +112,11 @@ class TransactionCache {
             data: null
         }
     }
-    getTx(filter, pageSize, offset) {
+    getTxs(filter, pageSize, offset) {
+        function special(filter) {
+            // check if filter contains FROM || TO field
+            return true
+        }
         const keys = Object.keys(filter);
         let filteredCache = [];
         this.cache.forEach(tx => {
@@ -128,21 +128,22 @@ class TransactionCache {
             if(eligible)
                 filteredCache.push(tx)
         })
+
         if(offset + pageSize - 1 < filteredCache.length) {
-            console.log('cache hit')
+            debug('cache hit')
             return {
                 cacheHit: true,
                 data: filteredCache.slice(offset, offset + pageSize)
             }
         }
-        console.log('cache miss')
+        debug('cache miss')
         return {
             cacheHit: false,
             data: null
         }
     }
     getHashAndTimeData() {
-        console.log(this.cache.map(value => {
+        debug(this.cache.map(value => {
             return {
                 height: value.height,
                 index: value.index,
@@ -156,22 +157,27 @@ let blockCache = new BlockCache();
 let txCache = new TransactionCache();
 
 const updateBlockCache = async () => {
-    let newestBlock = await query(makeLastBlock());
+    /**
+     * `TODO`: the case when the `newest block` does not next to the `head block on Blockcache`
+     */
+    const newestBlock = await query(makeLastBlock());
     blockCache.update(newestBlock[0]);
+    // blockCache.getHashAndTimeData()
 }
 const updateTxCache = async () => {
-    let newestBlock = await query(makeLastBlock());
-    let numTx = newestBlock[0].num_txs;
+    const newestBlock = await query(makeLastBlock());
+    const numTx = newestBlock[0].num_txs;
     const newestTxs = await query(makeListTxQuery({}, numTx, 0));
     txCache.update(newestTxs);
+    // txCache.getHashAndTimeData()
 }
 const updateCache = async () => {
     await updateBlockCache();
     await updateTxCache();
 }
 const initializeCache = async () => {
-    await blockCache.initializeCache();
-    await txCache.initializeCache();
+    await blockCache.init();
+    await txCache.init();
 }
 
 module.exports = {

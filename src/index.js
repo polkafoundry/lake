@@ -19,9 +19,9 @@ fastify.get('/block/list', async (request, reply) => {
     pageIndex = 1
   }
   const offset = (pageIndex - 1) * pageSize
-  const isCacheHit = blockCache.isDataOnCache(pageSize, offset);
+  const isCacheHit = blockCache.blocksOnCache(pageSize, offset);
   if(isCacheHit) {
-    return blockCache.getDataByPageOffset(pageSize, offset)
+    return blockCache.getBlocks(pageSize, offset)
   }
   return query(factory.makeListBlockQuery(pageSize, offset))
 })
@@ -32,15 +32,15 @@ fastify.get('/block/count', async (request, reply) => {
 
 fastify.get('/block/:height', async (request, reply) => {
   const height = request.params.height;
-  const isCacheHit = blockCache.isBlockOnCache(height);
+  const isCacheHit = blockCache.blockOnCache(height);
   if(isCacheHit) {
-    return blockCache.getDataByHeight(height)
+    return blockCache.getBlock(height)
   }
   return query(factory.makeOneBlockQuery(height))
 })
 
 fastify.get('/block/lastest', async (request, reply) => {
-  return blockCache.getDataByHeight()
+  return blockCache.getBlock()
 })
 
 fastify.get('/tx/list', async (request, reply) => {
@@ -67,7 +67,7 @@ fastify.get('/tx/list', async (request, reply) => {
   if (request.query.to) {
     filter.to = request.query.to
   }
-  const {cacheHit, data} = txCache.getTx(filter, pageSize, offset)
+  const {cacheHit, data} = txCache.getTxs(filter, pageSize, offset)
   if(cacheHit) {
     return data
   }
@@ -80,12 +80,12 @@ fastify.get('/tx/count', async (request, reply) => {
 
 fastify.get('/tx/:hash', async (request, reply) => {
   const hash = request.params.hash;
-  const {cacheHit, data} = txCache.getTxByHash(hash);
+  const {cacheHit, data} = txCache.getTx(hash);
   if(cacheHit){
-    console.log('cache hit')
+    debug('cache hit')
     return data;
   }
-  console.log('cache miss')
+  debug('cache miss')
   return query(factory.makeOneTxQuery(hash))
 })
 
