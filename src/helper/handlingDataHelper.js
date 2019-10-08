@@ -74,7 +74,7 @@ function generateTxEventQuery(r) {
     const payer = txResult.tx.payer || r.tags['tx.payer']
     const gasused = r.tags['gasused']
 
-    const data = JSON.parse(txResult.tx.data) || {}
+    const data = txResult.tx.data || {}
 
     const returnvalue = txResult.returnValue
     const result = {}
@@ -108,7 +108,7 @@ function generateOldTxEventQuery(r) {
     const payer = r.tx.payer || r.tags['tx.payer']
     const gasused = r.tags['gasused']
 
-    const data = JSON.parse(r.tx.data) || {}
+    const data = r.tx.data || {}
 
     const returnvalue = r.returnValue
     const result = {}

@@ -13,7 +13,7 @@ const { fetchOldBlocks, fetchOldTxs } = require('./fetchOldData')
 const { makeLastBlock, makeLastTx } = require('./helper/handlingDataHelper')
 
 const close = (code = 1) => {
-  const unsub = global._sub ? global._sub.unsubscribe() : Promise.resolve(undefined)
+  const unsub = (global._sub && global._sub.unsubscribe) ? global._sub.unsubscribe() : Promise.resolve(undefined)
   unsub.finally(() => {
     web3.close().finally(() => disconnect(err => {
       console.error(err)
