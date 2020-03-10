@@ -5,6 +5,9 @@ const fastify = require('fastify')({ logger: true })
 const { query, disconnect } = require('./helper/mysqlHelper')
 const factory = require('./helper/handlingDataHelper')
 
+const { blockCache, txCache } = require('./cacheDataInMem')
+
+const fetch = require('./fetch')
 // Declare a route
 fastify.get('/block/list', async (request, reply) => {
   let pageSize = parseInt(request.query.page_size)
@@ -16,6 +19,10 @@ fastify.get('/block/list', async (request, reply) => {
     pageIndex = 1
   }
   const offset = (pageIndex - 1) * pageSize
+  const isCacheHit = blockCache.blocksOnCache(pageSize, offset);
+  if(isCacheHit) {
+    return blockCache.getBlocks(pageSize, offset)
+  }
   return query(factory.makeListBlockQuery(pageSize, offset))
 })
 
@@ -24,11 +31,16 @@ fastify.get('/block/count', async (request, reply) => {
 })
 
 fastify.get('/block/:height', async (request, reply) => {
-  return query(factory.makeOneBlockQuery(request.params.height))
+  const height = request.params.height;
+  const isCacheHit = blockCache.blockOnCache(height);
+  if(isCacheHit) {
+    return blockCache.getBlock(height)
+  }
+  return query(factory.makeOneBlockQuery(height))
 })
 
-fastify.get('/block/latest', async (request, reply) => {
-  return query(factory.makeLastBlock())
+fastify.get('/block/lastest', async (request, reply) => {
+  return blockCache.getBlock()
 })
 
 fastify.get('/tx/list', async (request, reply) => {
@@ -55,6 +67,10 @@ fastify.get('/tx/list', async (request, reply) => {
   if (request.query.to) {
     filter.to = request.query.to
   }
+  const {cacheHit, data} = txCache.getTxs(filter, pageSize, offset)
+  if(cacheHit) {
+    return data
+  }
   return query(factory.makeListTxQuery(filter, pageSize, offset))
 })
 
@@ -63,7 +79,14 @@ fastify.get('/tx/count', async (request, reply) => {
 })
 
 fastify.get('/tx/:hash', async (request, reply) => {
-  return query(factory.makeOneTxQuery(request.params.hash))
+  const hash = request.params.hash;
+  const {cacheHit, data} = txCache.getTx(hash);
+  if(cacheHit){
+    debug('cache hit')
+    return data;
+  }
+  debug('cache miss')
+  return query(factory.makeOneTxQuery(hash))
 })
 
 // Run the server!
@@ -71,6 +94,7 @@ const start = async () => {
   try {
     await fastify.listen(3000)
     fastify.log.info(`server listening on ${fastify.server.address().port}`)
+    fetch()
   } catch (err) {
     fastify.log.error(err)
     disconnect(err => {

@@ -22,6 +22,7 @@ function fetchOldBlocks (from, to) {
 
   while (start <= end) {
     const p = web3.getBlocks({ minHeight: start, maxHeight: end }).then((result) => {
+      // array of blocks 
       const stepPromises = result.block_metas.reduce((list, bl) => {
         const blockQuery = generateOldBlockEventQuery(bl)
         list.push(query(blockQuery))
@@ -37,7 +38,6 @@ function fetchOldBlocks (from, to) {
   }
   return Promise.all(promises)
 }
-
 /**
  * Fetch transaction data from `from` block height to `to` block height
  * @param {*} from block height
