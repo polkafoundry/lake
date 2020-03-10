@@ -16,7 +16,7 @@ class BlockCache {
         this.setData(queryResult);
     }
     update(newBlock) {
-        this.cache.splice(0, 0, newBlock);
+        this.cache.unshift(newBlock);
         this.cache.length = this.cacheSize;
     }
     blocksOnCache(pageSize, offset) {
@@ -26,15 +26,18 @@ class BlockCache {
                 return true;
             }
             debug('cache miss')
-            return false;
-            
+            return false;          
         }
         debug('cache miss')
         return false;
     }
     blockOnCache(height){
+        if (!this.cache || !this.cache.length) {
+            debug('empty block cache')
+            return false
+        }
         const max = this.cache[0].height;
-        const min = this.cache[99].height;
+        const min = this.cache[this.cache.length - 1].height;
         if( height >= min && height <= max) {
             debug('cache hit');
             return true
@@ -113,10 +116,6 @@ class TransactionCache {
         }
     }
     getTxs(filter, pageSize, offset) {
-        function special(filter) {
-            // check if filter contains FROM || TO field
-            return true
-        }
         const keys = Object.keys(filter);
         let filteredCache = [];
         this.cache.forEach(tx => {
