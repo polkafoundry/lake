@@ -10,7 +10,11 @@ const { query, disconnect } = mysqlHelper
 
 const { fetchOldBlocks, fetchOldTxs } = require('./fetchOldData')
 
-const { makeLastBlock, makeLastTx } = require('./helper/handlingDataHelper')
+const { makeLastBlock, makeLastTx, makeListBlockQuery } = require('./helper/handlingDataHelper')
+
+const { updateCache, initializeCache } = require('./cacheDataInMem');
+
+
 
 const close = (code = 1) => {
   const unsub = (global._sub && global._sub.unsubscribe) ? global._sub.unsubscribe() : Promise.resolve(undefined)
@@ -39,7 +43,7 @@ const fetchData = async (fromBlockHeight, fromTxHeight, toHeight) => {
 
   } catch (error) {
     handleError(error)
-  }
+  } 
 }
 
 const fetchAtInterval = async () => {
@@ -54,7 +58,7 @@ const fetchAtInterval = async () => {
 
     // Get latest block
     const latestBlock = await web3.getBlocks({ minHeight: 1, maxHeight: 1 })
-    //debug(latestBlock)
+    // debug(latestBlock)
     latestHeight = latestBlock.last_height
 
     await fetchData(fromBlockHeight, fromTxHeight, latestHeight)
@@ -68,23 +72,24 @@ const fetchAtInterval = async () => {
 }
 
 const watchNewBlock = async () => {
-  global._sub = web3.subscribe('NewBlockHeader', (error, result) => {
+  global._sub = web3.subscribe('NewBlockHeader', async (error, result) => {
     if (error) {
       handleError(error)
       return
     }
 
     const height = result.data.value.header.height
-    fetchData(height - 1, height - 1, height)
+    await fetchData(height - 1, height - 1, height)
+    await updateCache()
   })
 }
-
 const start = async () => {
   await fetchAtInterval()
+  await initializeCache()
   watchNewBlock()
-
+  
   // exit in case the websocket is lost (e.g. rpc restarts), so pm2 can restart things
   web3.onError(handleError)
 }
 
-start()
+module.exports = start
