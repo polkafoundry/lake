@@ -10,7 +10,7 @@ const { query, disconnect } = mysqlHelper
 
 const { fetchOldBlocks, fetchOldTxs } = require('./fetchOldData')
 
-const { makeLastBlock, makeLastTx, makeListBlockQuery } = require('./helper/handlingDataHelper')
+const { makeLastBlock, makeLastTx } = require('./helper/handlingDataHelper')
 
 const { updateCache, initializeCache } = require('./cacheDataInMem');
 
