@@ -11,13 +11,6 @@ const { query, disconnect } = mysqlHelper
 const { fetchOldBlocks, fetchOldTxs } = require('./fetchOldData')
 
 const { makeLastBlock, makeLastTx } = require('./helper/handlingDataHelper')
-<<<<<<< HEAD
-
-const { updateCache, initializeCache } = require('./cacheDataInMem');
-
-
-=======
->>>>>>> parent of f33c984... Merge pull request #4 from TradaTech/tungduong
 
 const close = (code = 1) => {
   const unsub = (global._sub && global._sub.unsubscribe) ? global._sub.unsubscribe() : Promise.resolve(undefined)
