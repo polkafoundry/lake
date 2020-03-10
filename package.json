@@ -19,15 +19,15 @@
   },
   "homepage": "https://github.com/TradaTech/lake#readme",
   "dependencies": {
-    "@iceteachain/web3": "^0.1.19",
+    "@iceteachain/web3": "^0.1.20",
     "debug": "^4.1.1",
-    "dotenv": "^8.0.0",
-    "fastify": "^2.5.0",
+    "dotenv": "^8.2.0",
+    "fastify": "^2.12.0",
     "moment": "^2.24.0",
-    "mysql": "^2.17.1",
-    "nodemon": "^1.19.1"
+    "mysql": "^2.18.1",
+    "nodemon": "^2.0.2"
   },
   "devDependencies": {
-    "standard": "^12.0.1"
+    "standard": "^14.3.1"
   }
 }
