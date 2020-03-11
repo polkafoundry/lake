@@ -1,6 +1,6 @@
 require('dotenv').config()
 const debug = require('debug')('lake:web')
-const fastify = require('fastify')({ logger: true })
+const fastify = require('fastify')({ logger: process.env.WEB_LOG === '1' })
 
 const { query, disconnect } = require('./helper/mysqlHelper')
 const factory = require('./helper/handlingDataHelper')

@@ -1,5 +1,8 @@
+require('dotenv').config()
+const debug = require('debug')('lake:fetch')
+
 const { IceteaWeb3 } = require('@iceteachain/web3')
-const web3 = new IceteaWeb3('wss://rpc.icetea.io/websocket')
+const web3 = new IceteaWeb3(process.env.RPC_URL)
 
 const handlingDataHelper = require('./helper/handlingDataHelper')
 const { generateOldBlockEventQuery, generateOldTxEventQuery } = handlingDataHelper
@@ -22,7 +25,7 @@ function fetchOldBlocks (from, to) {
 
   while (start <= end) {
     const p = web3.getBlocks({ minHeight: start, maxHeight: end }).then((result) => {
-      // array of blocks 
+      // array of blocks
       const stepPromises = result.block_metas.reduce((list, bl) => {
         const blockQuery = generateOldBlockEventQuery(bl)
         list.push(query(blockQuery))
@@ -46,20 +49,33 @@ function fetchOldBlocks (from, to) {
 function fetchOldTxs (from, to) {
   if (to < from) return
 
-  const promises = []
+  const promises = []; const perPage = 100
   for (let i = from; i <= to; i++) {
-    // TODO: currently not work if a block contains more than 100 txs
     // tendermint support max per_page of 100 (default 30)
-    const p = web3.searchTransactions(`tx.height = ${i}`, { per_page: 100 }).then((result) => {
-      const getTxs = result.txs.reduce((arr, tx) => {
-        const decoded = web3.utils.decodeTxResult(tx)
-        const mysqlQuery = generateOldTxEventQuery(decoded)
-        arr.push(query(mysqlQuery))
-        return arr
-      }, [])
-      return Promise.all(getTxs)
-    })
-    promises.push(p)
+    // note that, if setting 'page' exceeding number of pages, tendermint simply ignore it :(
+    // so we'll haveo to deal with totalCount
+    let stop = false; let page = 0; let totalCount = 0; let fetched = 0
+    while (!stop && page < 100) {
+      page++
+      const p = web3.searchTransactions(`tx.height=${i}`, { page, per_page: perPage }).then((result) => {
+        totalCount = totalCount || Number(result.total_count)
+        fetched += result.txs.length
+        if (fetched >= totalCount || result.txs.length < perPage) {
+          stop = true
+        }
+        const getTxs = result.txs.reduce((arr, tx) => {
+          const decoded = web3.utils.decodeTxResult(tx)
+          const mysqlQuery = generateOldTxEventQuery(decoded)
+          arr.push(query(mysqlQuery))
+          return arr
+        }, [])
+        return Promise.all(getTxs)
+      }).catch(err => {
+        debug(err)
+        stop = true
+      })
+      promises.push(p)
+    }
   }
   return Promise.all(promises)
 }
