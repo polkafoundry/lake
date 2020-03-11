@@ -41,6 +41,30 @@ function fetchOldBlocks (from, to) {
   }
   return Promise.all(promises)
 }
+
+function fetchTxPage (height, page = 1, perPage = 100, fetched = 0) {
+  return web3.searchTransactions(`tx.height=${height}`, { page, per_page: perPage }).then((result) => {
+    // add txs promise
+    const getTxs = result.txs.reduce((arr, tx) => {
+      const decoded = web3.utils.decodeTxResult(tx)
+      const mysqlQuery = generateOldTxEventQuery(decoded)
+      arr.push(query(mysqlQuery))
+      return arr
+    }, [])
+
+    // search for next pages
+    // note that, if setting 'page' exceeding number of pages, tendermint simply ignore it :(
+    // so we'll have to deal with totalCount
+    const totalCount = Number(result.total_count)
+    fetched += result.txs.length
+    if (fetched < totalCount || result.txs.length >= perPage) {
+      getTxs.push(fetchTxPage(height, page + 1, perPage, fetched))
+    }
+
+    return Promise.all(getTxs)
+  })
+}
+
 /**
  * Fetch transaction data from `from` block height to `to` block height
  * @param {*} from block height
@@ -49,33 +73,9 @@ function fetchOldBlocks (from, to) {
 function fetchOldTxs (from, to) {
   if (to < from) return
 
-  const promises = []; const perPage = 100
+  const promises = []
   for (let i = from; i <= to; i++) {
-    // tendermint support max per_page of 100 (default 30)
-    // note that, if setting 'page' exceeding number of pages, tendermint simply ignore it :(
-    // so we'll haveo to deal with totalCount
-    let stop = false; let page = 0; let totalCount = 0; let fetched = 0
-    while (!stop && page < 100) {
-      page++
-      const p = web3.searchTransactions(`tx.height=${i}`, { page, per_page: perPage }).then((result) => {
-        totalCount = totalCount || Number(result.total_count)
-        fetched += result.txs.length
-        if (fetched >= totalCount || result.txs.length < perPage) {
-          stop = true
-        }
-        const getTxs = result.txs.reduce((arr, tx) => {
-          const decoded = web3.utils.decodeTxResult(tx)
-          const mysqlQuery = generateOldTxEventQuery(decoded)
-          arr.push(query(mysqlQuery))
-          return arr
-        }, [])
-        return Promise.all(getTxs)
-      }).catch(err => {
-        debug(err)
-        stop = true
-      })
-      promises.push(p)
-    }
+    promises.push(fetchTxPage(i))
   }
   return Promise.all(promises)
 }
