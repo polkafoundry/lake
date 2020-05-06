@@ -1,9 +1,24 @@
 require('dotenv').config()
 const debug = require('debug')('lake:web')
 const fastify = require('fastify')({ logger: process.env.WEB_LOG === '1' })
+const cors = require('fastify-cors')
 
 const { query, disconnect } = require('./helper/mysqlHelper')
 const factory = require('./helper/handlingDataHelper')
+
+const handleOptions = {
+  origin: process.env.ALLOW_ORIGIN || '*',
+  methods: 'GET,POST,PUT,OPTIONS',
+  credentials: true,
+  maxAge: 86400,
+  allowedHeaders: 'Authorization',
+}
+
+fastify.register(cors, handleOptions)
+
+fastify.get('/', (request, reply) => {
+  reply.send('Welcome to Lake API.')
+})
 
 // Declare a route
 fastify.get('/block/list', async (request, reply) => {
@@ -73,7 +88,7 @@ const start = async () => {
     fastify.log.info(`server listening on ${fastify.server.address().port}`)
   } catch (err) {
     fastify.log.error(err)
-    disconnect(err => {
+    disconnect((err) => {
       debug(err)
       process.exit(1)
     })

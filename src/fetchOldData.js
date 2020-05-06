@@ -46,8 +46,8 @@ function fetchTxPage (height, page = 1, perPage = 100, fetched = 0) {
   return web3.searchTransactions(`tx.height=${height}`, { page, per_page: perPage }).then((result) => {
     // add txs promise
     const getTxs = result.txs.reduce((arr, tx) => {
-      const decoded = web3.utils.decodeTxResult(tx)
-      const mysqlQuery = generateOldTxEventQuery(decoded)
+      // const decoded = web3.utils.decodeTxResult(tx)
+      const mysqlQuery = generateOldTxEventQuery(tx)
       arr.push(query(mysqlQuery))
       return arr
     }, [])
