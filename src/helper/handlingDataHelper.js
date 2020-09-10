@@ -41,6 +41,10 @@ const filterObject = function (table, ob) {
   }, {})
 }
 
+const getTags = r => {
+  return r.events.find(e => (e.emitter === 'system' && e.eventName === 'tx')).eventData
+}
+
 const makeInsertQuery = (table, data) => {
   data = filterObject(table, data)
   const keys = Object.keys(data).map(x => '`' + x + '`')
@@ -103,10 +107,12 @@ function generateOldTxEventQuery (r) {
   const { height, index, hash } = r
   const { value, fee: gaslimit, nonce } = r.tx
 
-  const from = r.tx.from || r.tags['tx.from']
-  const to = r.tx.to || r.tags['tx.to']
-  const payer = r.tx.payer || r.tags['tx.payer']
-  const gasused = r.tags.gasused
+  const tags = getTags(r)
+
+  const from = r.tx.from || tags.from
+  const to = r.tx.to || tags.to
+  const payer = r.tx.payer || tags.payer
+  const gasused = tags.gasused
 
   const data = r.tx.data || {}
 
