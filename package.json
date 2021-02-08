@@ -21,7 +21,7 @@
     "@iceteachain/web3": "^0.2.5",
     "debug": "^4.1.1",
     "dotenv": "^8.2.0",
-    "fastify": "^2.12.0",
+    "fastify": "^2.15.1",
     "moment": "^2.24.0",
     "mysql": "^2.18.1",
     "nodemon": "^2.0.2"
